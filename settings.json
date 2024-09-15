@@ -1,0 +1,8 @@
+{
+    "token":"YUOR TELEGRAM TOKEN FROM @BotFather",
+    "admins":"YUOR TELEGRAM USER ID",
+    "mysql_username":"YOUR USERNAME FOR CONNECT TO MYSQL DATABASE",
+    "mysql_url":"YUOR MYSQL DATABASE URL",
+    "mysql_databasename":"YUOR MYSQL DATABASE NAME",
+    "mysql_password":"YOUR MYSQL PASSWORD"
+}
