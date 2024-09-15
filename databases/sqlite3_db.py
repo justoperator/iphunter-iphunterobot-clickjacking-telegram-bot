@@ -1,10 +1,9 @@
 import sqlite3
 
-# Создаем соединение с базой данных
 conn = sqlite3.connect('databases/database.db')
 c = conn.cursor()
 
-# Таблица пользователей
+# Users table
 c.execute('''
     CREATE TABLE IF NOT EXISTS users(
         id TEXT PRIMARY KEY,
@@ -15,7 +14,7 @@ c.execute('''
     )
 ''')
 
-# Таблица премиум-пользователей
+# Premium users table
 c.execute('''
     CREATE TABLE IF NOT EXISTS premium_us(
         user TEXT PRIMARY KEY,
@@ -25,7 +24,7 @@ c.execute('''
     )
 ''')
 
-# Таблица рефералов
+# Refferals table
 c.execute('''
     CREATE TABLE IF NOT EXISTS refferals_us(
         user TEXT PRIMARY KEY,
@@ -33,7 +32,7 @@ c.execute('''
     )
 ''')
 
-# Таблица сообщений пользователей
+# Messages count table
 c.execute('''
     CREATE TABLE IF NOT EXISTS messages_us(
         user TEXT PRIMARY KEY,
@@ -41,7 +40,7 @@ c.execute('''
     )
 ''')
 
-# Таблица для хранения информации о реферальных связях
+# Another refferals table
 c.execute('''
     CREATE TABLE IF NOT EXISTS referrals(
         user_id TEXT,
@@ -50,7 +49,7 @@ c.execute('''
     )
 ''')
 
-# Таблица для промокодов
+# Promocodes table
 c.execute('''
     CREATE TABLE IF NOT EXISTS promo_codes(
         code TEXT PRIMARY KEY,
@@ -61,6 +60,7 @@ c.execute('''
     )
 ''')
 
+# Used promocodes table
 c.execute('''
     CREATE TABLE IF NOT EXISTS used_promos(
         user_id INTEGER,
@@ -69,7 +69,7 @@ c.execute('''
     )
     ''')
 
-# Таблица для подписок
+# Subscribers table
 c.execute('''
     CREATE TABLE IF NOT EXISTS subscriptions(
         user TEXT PRIMARY KEY,
